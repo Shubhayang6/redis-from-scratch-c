@@ -5,7 +5,7 @@ BUILD   := build
 
 SRC   := $(wildcard src/*.c)
 OBJ   := $(SRC:src/%.c=$(BUILD)/%.o)
-LIB   := $(BUILD)/libtinykv.a
+LIB   := $(BUILD)/libkv.a
 
 TESTS := $(wildcard tests/*.c)
 TBIN  := $(TESTS:tests/%.c=$(BUILD)/tests/%)
