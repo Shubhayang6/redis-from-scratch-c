@@ -1,33 +1,42 @@
-# tinykv-c
+# redis-from-scratch-c
 
-A small, crash-safe key-value store written in C11 for Linux.
+A Redis-compatible in-memory database built from scratch in C on Linux.
 
-The goal: writes survive a crash or power loss at any point, and every
-performance claim is backed by a reproducible benchmark.
+Every performance claim here is backed by a reproducible benchmark against real Redis.
 
 ## Status
 
 Early development. Nothing to use yet.
 
-## Planned design
+## What it will do
 
-- **Write-ahead log (WAL):** every write is appended to a log and flushed
-  with `fsync` before it is acknowledged.
-- **Crash recovery:** on startup, replay the log and discard a torn
-  final record (detected with a per-record checksum).
-- **In-memory index:** hash table from key to log offset.
-- **Compaction:** rewrite live keys to a new file, then swap it in
-  atomically with `rename`.
+- **TCP server with an event loop:** one thread serves many clients with non-blocking sockets.
+- **Key-value commands:** `GET`, `SET`, `DEL`, plus sorted sets (`ZADD`, `ZRANGE`, ...).
+- **Own data structures:** a resizable hashtable and a balanced binary tree, no libraries.
+- **Expiry:** timers, idle-connection timeouts and keys with a time-to-live (TTL).
+- **Thread pool:** large deletes run off the main thread.
+
+## Beyond the tutorial
+
+Parts of this project follow [Build Your Own Redis with C/C++](https://build-your-own.org/redis/).
+These parts are my own additions:
+
+- [ ] **Crash-safe persistence:** an append-only log flushed with `fsync`, replayed on startup, with crash tests that kill the server mid-write
+- [ ] **Real Redis protocol (RESP):** so `redis-cli` and `redis-benchmark` work against it
+- [ ] **epoll event loop:** and a comparison with `poll()` at 10,000 connections
+- [ ] **Benchmarks:** requests per second and p50/p99 latency, side by side with real Redis
 
 ## Roadmap
 
-- [ ] Public API: `open`, `put`, `get`, `delete`, `close`
-- [ ] Append-only log with CRC32 per record
-- [ ] Recovery that tolerates a torn last write
-- [ ] Crash tests (kill the process mid-write, verify no data loss)
-- [ ] Benchmarks: throughput and p50/p99 latency, with and without `fsync`
-- [ ] Compaction
-- [ ] Concurrency (single writer, multiple readers)
+- [ ] TCP server and client
+- [ ] Request-response protocol
+- [ ] Event loop with non-blocking IO
+- [ ] Key-value server
+- [ ] Hashtable with incremental resizing
+- [ ] Data serialization
+- [ ] Balanced binary tree and sorted set
+- [ ] Timers, timeouts and TTL
+- [ ] Thread pool
 
 ## Build
 
@@ -44,8 +53,8 @@ Requires a C11 compiler (gcc or clang) and GNU make on Linux.
 ## Layout
 
 ```
-include/   public header
-src/       library source
+include/   headers
+src/       server source
 tests/     unit and crash tests
 bench/     benchmarks
 ```
